@@ -1,22 +1,58 @@
 #!/bin/bash
 
-# Time to wait between services (seconds)
-DELAY=10
+# Max time to wait per service (seconds)
+TIMEOUT=60
+
+wait_for_containers() {
+  local timeout=$TIMEOUT
+  shift
+  local containers=("$@")
+
+  echo "Waiting for containers: ${containers[*]}"
+
+  for ((i=0; i<timeout; i++)); do
+    all_ready=true
+
+    for c in "${containers[@]}"; do
+      status=$(docker inspect --format='{{.State.Status}}' "$c" 2>/dev/null)
+      health=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$c" 2>/dev/null)
+
+      # Must be running
+      if [[ "$status" != "running" ]]; then
+        all_ready=false
+        break
+      fi
+
+      # If healthcheck exists, prefer healthy
+      if [[ "$health" != "none" && "$health" != "healthy" ]]; then
+        # Allow "starting" to pass after half the timeout
+        if (( i < timeout / 2 )); then
+          all_ready=false
+          break
+        fi
+      fi
+    done
+
+    if $all_ready; then
+      echo "Ready: ${containers[*]}"
+      return 0
+    fi
+
+    sleep 2
+  done
+
+<<<<<<< HEAD
+  echo "Timeout reached, continuing anyway: ${containers[*]}"
+  return 0
+}
 
 restart_service () {
   SERVICE_PATH=$1
 
-  cat << "EOF"
-██     ██ ███████ ██████  ██████   ██████ 
-██     ██ ██      ██   ██ ██   ██ ██    ██
-██  █  ██ █████   ██████  ██████  ██    ██
-██ ███ ██ ██      ██   ██ ██   ██ ██    ██
- ███ ███  ███████ ██████  ██████   ██████ 
-EOF
-
-  echo "----------------------------------------"
+  echo ""
+  echo "========================================"
   echo "Restarting: $SERVICE_PATH"
-  echo "----------------------------------------"
+  echo "========================================"
 
   cd "$SERVICE_PATH" || {
     echo "Failed to enter $SERVICE_PATH"
@@ -27,15 +63,30 @@ EOF
   docker compose up -d
 
   if [ $? -ne 0 ]; then
-    echo "Failed to start containers in $SERVICE_PATH"
+    echo "docker compose failed in $SERVICE_PATH"
     exit 1
   fi
 
-  echo "Started successfully. Waiting $DELAY seconds..."
-  sleep $DELAY
+  # Get container IDs
+  container_ids=$(docker compose ps -q)
+
+  if [ -z "$container_ids" ]; then
+    echo "No containers found in $SERVICE_PATH"
+    return
+  fi
+
+  # Convert IDs
+  container_names=()
+  for id in $container_ids; do
+    name=$(docker inspect --format='{{.Name}}' "$id")
+    name=${name#/}
+    container_names+=("$name")
+  done
+
+  wait_for_containers "${container_names[@]}"
 }
 
-# Order matters (DNS → proxy → apps → media)
+# ---- SERVICE ORDER (important for stack) ----
 restart_service "/mnt/d/ww40/docker/pihole"
 restart_service "/mnt/d/ww40/docker/caddy"
 restart_service "/mnt/d/ww40/docker/homepage"
@@ -44,6 +95,17 @@ restart_service "/mnt/d/ww40/docker/frigate"
 restart_service "/mnt/d/ww40/docker/vaultwarden"
 restart_service "/mnt/d/ww40/docker/plex"
 
+echo ""
+echo "All services restarted successfully."
+
+cat << "EOF"
+██     ██ ███████ ██████  ██████   ██████ 
+██     ██ ██      ██   ██ ██   ██ ██    ██
+██  █  ██ █████   ██████  ██████  ██    ██
+██ ███ ██ ██      ██   ██ ██   ██ ██    ██
+ ███ ███  ███████ ██████  ██████   ██████
+EOF
+=======
   cat << "EOF"
 ██     ██ ███████ ██████  ██████   ██████ 
 ██     ██ ██      ██   ██ ██   ██ ██    ██
@@ -53,3 +115,5 @@ restart_service "/mnt/d/ww40/docker/plex"
 EOF
 
 echo "All services restarted successfully."
+
+>>>>>>> 8d9dd3b8d8daba7883ff67775b1288ee2f25c523
