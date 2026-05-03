@@ -1,0 +1,101 @@
+#!/bin/bash
+
+# Time to wait between services (seconds)
+DELAY=10
+
+restart_service () {
+  SERVICE_PATH=$1
+
+  cat << "EOF"
+██     ██ ███████ ██████  ██████   ██████ 
+██     ██ ██      ██   ██ ██   ██ ██    ██
+██  █  ██ █████   ██████  ██████  ██    ██
+██ ███ ██ ██      ██   ██ ██   ██ ██    ██
+ ███ ███  ███████ ██████  ██████   ██████ 
+EOF
+
+  echo "----------------------------------------"
+  echo "Restarting: $SERVICE_PATH"
+  echo "----------------------------------------"
+
+  cd "$SERVICE_PATH" || {
+    echo "Failed to enter $SERVICE_PATH"
+    exit 1
+  }
+
+  docker compose down
+  docker compose up -d
+
+  if [ $? -ne 0 ]; then
+    echo "Failed to start containers in $SERVICE_PATH"
+    exit 1
+  fi
+
+  echo "Started successfully. Waiting $DELAY seconds..."
+  sleep $DELAY
+}
+
+# Order matters (DNS → proxy → apps → media)
+restart_service "/mnt/d/ww40/docker/pihole"
+restart_service "/mnt/d/ww40/docker/caddy"
+restart_service "/mnt/d/ww40/docker/homepage"
+restart_service "/mnt/d/ww40/docker/immich-app"
+restart_service "/mnt/d/ww40/docker/frigate"
+restart_service "/mnt/d/ww40/docker/vaultwarden"
+restart_service "/mnt/d/ww40/docker/plex"
+
+#!/bin/bash
+
+# Time to wait between services (seconds)
+DELAY=10
+
+restart_service () {
+  SERVICE_PATH=$1
+
+  cat << "EOF"
+██     ██ ███████ ██████  ██████   ██████ 
+██     ██ ██      ██   ██ ██   ██ ██    ██
+██  █  ██ █████   ██████  ██████  ██    ██
+██ ███ ██ ██      ██   ██ ██   ██ ██    ██
+ ███ ███  ███████ ██████  ██████   ██████ 
+EOF
+
+  echo "----------------------------------------"
+  echo "Restarting: $SERVICE_PATH"
+  echo "----------------------------------------"
+
+  cd "$SERVICE_PATH" || {
+    echo "Failed to enter $SERVICE_PATH"
+    exit 1
+  }
+
+  docker compose down
+  docker compose up -d
+
+  if [ $? -ne 0 ]; then
+    echo "Failed to start containers in $SERVICE_PATH"
+    exit 1
+  fi
+
+  echo "Started successfully. Waiting $DELAY seconds..."
+  sleep $DELAY
+}
+
+# Order matters (DNS → proxy → apps → media)
+restart_service "/mnt/d/ww40/docker/pihole"
+restart_service "/mnt/d/ww40/docker/caddy"
+restart_service "/mnt/d/ww40/docker/homepage"
+restart_service "/mnt/d/ww40/docker/immich-app"
+restart_service "/mnt/d/ww40/docker/frigate"
+restart_service "/mnt/d/ww40/docker/vaultwarden"
+restart_service "/mnt/d/ww40/docker/plex"
+
+  cat << "EOF"
+██     ██ ███████ ██████  ██████   ██████ 
+██     ██ ██      ██   ██ ██   ██ ██    ██
+██  █  ██ █████   ██████  ██████  ██    ██
+██ ███ ██ ██      ██   ██ ██   ██ ██    ██
+ ███ ███  ███████ ██████  ██████   ██████ 
+EOF
+
+echo "All services restarted successfully."
