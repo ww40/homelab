@@ -1,0 +1,21 @@
+Find Immich backups in D:, looks for folders with names like backup or immich, sorts by last modified, shows top 20 results-
+    find /mnt/d -type d \( -iname "*backup*" -o -iname "*immich*" \) -printf "%TY-%Tm-%Td %TT %p\n" 2>/dev/null | sort -r | head -20
+
+borg list /mnt/d/ww40/borg/immich
+
+Find borg passphrase in D:-
+    grep -Rni "passphrase" /mnt/d
+Find borg passphrase in D:, faster with file extension filters-
+    grep -Rni --include="*.env" --include="*.yml" --include="*.txt" "passphrase" /mnt/d
+Display in plain text
+sudo cat /root/.config/borg/passphrase
+
+sudo crontab -l
+crontab -l
+
+
+https://myaccount.google.com/apppasswords
+echo "test" | mail -s "test" youremail@gmail.com
+which sendmail
+code ~/.msmtprc
+chmod 600 ~/.msmtprc
