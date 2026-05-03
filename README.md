@@ -1,2 +1,2 @@
 # homelab
-storage for homlab stuff
+storage for homelab stuff
