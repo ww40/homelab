@@ -3,12 +3,16 @@ set -euo pipefail
 
 REPO="/mnt/d/ww40/borg/homelab"
 ARCHIVE="homelab-configs-$(date +%F_%H-%M)"
+MAIL_TO="eyezopen@gmail.com"
 
-# Run borg as root so it can read container-owned dirs (e.g. Immich postgres)
 SUDO_BORG="sudo -E borg"
-
-# Tell borg how to get the passphrase (no prompts)
 export BORG_PASSCOMMAND="cat /root/.config/borg/passphrase"
+
+# Temp log file
+LOG_FILE=$(mktemp)
+
+# Capture ALL output
+exec > >(tee -a "$LOG_FILE") 2>&1
 
 echo "=== Borg create: $ARCHIVE ==="
 
@@ -39,3 +43,9 @@ echo "=== Borg compact ==="
 $SUDO_BORG compact "$REPO"
 
 echo "=== Done ==="
+
+# Send email
+mail -s "Borg Backup Report: $ARCHIVE" "$MAIL_TO" < "$LOG_FILE"
+
+# Cleanup
+rm -f "$LOG_FILE"
