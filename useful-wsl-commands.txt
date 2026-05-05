@@ -15,9 +15,14 @@ sudo cat /root/.config/borg/passphrase
 sudo crontab -l
 crontab -l
 
+test run a cron job:
+env -i /bin/bash -lc "$HOME/bin/backup-homelab.sh"
+
 
 https://myaccount.google.com/apppasswords
 echo "test" | mail -s "test" youremail@gmail.com
 which sendmail
 code ~/.msmtprc
 chmod 600 ~/.msmtprc
+
+code ~/.bashrc
