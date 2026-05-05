@@ -1,22 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+trap 'echo "❌ BACKUP FAILED at $(date)"' ERR
+
 REPO="/mnt/d/ww40/borg/homelab"
 ARCHIVE="homelab-configs-$(date +%F_%H-%M)"
 MAIL_TO="eyezopen@gmail.com"
 
-SUDO_BORG="sudo -E borg"
-export BORG_PASSCOMMAND="cat /root/.config/borg/passphrase"
+# Environment (cron-safe)
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-# Temp log file
-LOG_FILE=$(mktemp)
+# Let borg fetch passphrase via sudo
+export BORG_PASSCOMMAND="/usr/bin/sudo -n /usr/bin/cat /root/.config/borg/passphrase"
 
-# Capture ALL output
+# Temporary log file
+LOG_FILE=$(mktemp /tmp/borg-backup-XXXXXX.log)
+
+# Capture all output
 exec > >(tee -a "$LOG_FILE") 2>&1
 
+echo "=== $(date) START backup-homelab ==="
 echo "=== Borg create: $ARCHIVE ==="
 
-$SUDO_BORG create --stats --compression zstd,6 \
+/usr/bin/sudo /usr/bin/borg create --stats --compression zstd,6 \
   --exclude '/mnt/d/ww40/Docker/immich-app/library' \
   --exclude '/mnt/d/ww40/Docker/immich-app/library/**' \
   --exclude '/mnt/d/ww40/Docker/frigate/storage' \
@@ -33,19 +39,20 @@ $SUDO_BORG create --stats --compression zstd,6 \
   /home/ww40/homepage
 
 echo "=== Borg prune ==="
-$SUDO_BORG prune -v --list "$REPO" \
+/usr/bin/sudo /usr/bin/borg prune -v --list "$REPO" \
   --glob-archives 'homelab-configs-*' \
   --keep-daily=7 \
   --keep-weekly=4 \
   --keep-monthly=6
 
 echo "=== Borg compact ==="
-$SUDO_BORG compact "$REPO"
+/usr/bin/sudo /usr/bin/borg compact "$REPO"
 
 echo "=== Done ==="
+echo "✅ BACKUP SUCCESS at $(date)"
 
-# Send email
-mail -s "Borg Backup Report: $ARCHIVE" "$MAIL_TO" < "$LOG_FILE"
+if ! mail -s "Borg Backup Report: $ARCHIVE" "$MAIL_TO" < "$LOG_FILE"; then
+  echo "WARNING: Failed to send email"
+fi
 
-# Cleanup
 rm -f "$LOG_FILE"
