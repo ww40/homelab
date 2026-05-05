@@ -5,8 +5,10 @@ borg list /mnt/d/ww40/borg/immich
 
 Find borg passphrase in D:-
     grep -Rni "passphrase" /mnt/d
+
 Find borg passphrase in D:, faster with file extension filters-
     grep -Rni --include="*.env" --include="*.yml" --include="*.txt" "passphrase" /mnt/d
+
 Display in plain text
 sudo cat /root/.config/borg/passphrase
 
