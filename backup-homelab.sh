@@ -51,6 +51,8 @@ echo "=== Borg compact ==="
 echo "=== Done ==="
 echo "✅ BACKUP SUCCESS at $(date)"
 
+# Send email
+mail -s "Borg Backup Report: $ARCHIVE" "$MAIL_TO" < "$LOG_FILE" || true
 if ! mail -s "Borg Backup Report: $ARCHIVE" "$MAIL_TO" < "$LOG_FILE"; then
   echo "WARNING: Failed to send email"
 fi
